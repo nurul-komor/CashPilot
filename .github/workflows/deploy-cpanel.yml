@@ -69,18 +69,18 @@ jobs:
               <IfModule mod_negotiation.c>
                   Options -MultiViews -Indexes
               </IfModule>
-              
+
               RewriteEngine On
-              
+
               # Handle Authorization Header
               RewriteCond %{HTTP:Authorization} .
               RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-              
+
               # Redirect Trailing Slashes If Not A Folder...
               RewriteCond %{REQUEST_FILENAME} !-d
               RewriteCond %{REQUEST_URI} (.+)/$
               RewriteRule ^ %1 [L,R=301]
-              
+
               # Send Requests To Front Controller...
               RewriteCond %{REQUEST_FILENAME} !-d
               RewriteCond %{REQUEST_FILENAME} !-f
@@ -108,7 +108,7 @@ jobs:
           username: ${{ secrets.CPANEL_FTP_USERNAME }}
           password: ${{ secrets.CPANEL_FTP_PASSWORD }}
           local-dir: ./deploy/
-          server-dir: ${{ secrets.CPANEL_DEPLOY_PATH || '/public_html/' }}
+          server-dir: ${{ secrets.CPANEL_DEPLOY_PATH || '/' }}
           dangerous-clean-slate: false
           exclude: |
             **/.git*
@@ -141,10 +141,10 @@ jobs:
           echo "### 📋 Next Steps (via cPanel File Manager or SSH):" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "1. **Configure Environment:**" >> $GITHUB_STEP_SUMMARY
-          echo "   - Upload `.env` file to your server root" >> $GITHUB_STEP_SUMMARY
+          echo "   - Upload `.env` file to your FTP root directory" >> $GITHUB_STEP_SUMMARY
           echo "   - Set your database credentials, app URL, and Gemini API key" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "2. **Set Permissions:**" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Set Permissions (in FTP root):**" >> $GITHUB_STEP_SUMMARY
           echo "   ```bash" >> $GITHUB_STEP_SUMMARY
           echo "   chmod -R 755 storage bootstrap/cache" >> $GITHUB_STEP_SUMMARY
           echo "   chmod -R 755 public" >> $GITHUB_STEP_SUMMARY
@@ -152,6 +152,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "3. **Run Artisan Commands (via SSH or cPanel Terminal):**" >> $GITHUB_STEP_SUMMARY
           echo "   ```bash" >> $GITHUB_STEP_SUMMARY
+          echo "   cd /" >> $GITHUB_STEP_SUMMARY
           echo "   php artisan key:generate" >> $GITHUB_STEP_SUMMARY
           echo "   php artisan migrate --force" >> $GITHUB_STEP_SUMMARY
           echo "   php artisan config:cache" >> $GITHUB_STEP_SUMMARY

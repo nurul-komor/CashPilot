@@ -21,15 +21,17 @@ Add the following secrets to your GitHub repository:
 - **`CPANEL_FTP_HOST`** - Your FTP server hostname (e.g., `ftp.yourdomain.com` or IP address)
 - **`CPANEL_FTP_USERNAME`** - Your FTP username
 - **`CPANEL_FTP_PASSWORD`** - Your FTP password
-- **`CPANEL_DEPLOY_PATH`** - Deployment path (default: `/public_html/`)
+- **`CPANEL_DEPLOY_PATH`** - Deployment path (default: `/` for FTP root)
 
 ### Example:
 ```
 CPANEL_FTP_HOST: ftp.yourdomain.com
 CPANEL_FTP_USERNAME: your_username
 CPANEL_FTP_PASSWORD: your_secure_password
-CPANEL_DEPLOY_PATH: /public_html/
+CPANEL_DEPLOY_PATH: /
 ```
+
+**Note:** If your FTP is set to the domain root directly, use `/` as the deploy path. Files will be deployed directly to your FTP root directory.
 
 ## Deployment Process
 
@@ -66,14 +68,15 @@ After the GitHub Actions workflow completes, you need to complete these steps on
 **Option A: Via cPanel File Manager**
 1. Log into cPanel
 2. Open File Manager
-3. Navigate to `public_html/`
+3. Navigate to your FTP root directory (where files are deployed)
 4. Upload your `.env` file
 5. Set permissions to 644
 
 **Option B: Via FTP Client**
 1. Connect to your FTP server
-2. Upload `.env` file to the root directory
-3. Set permissions to 644
+2. Navigate to the root directory (where your files are)
+3. Upload `.env` file
+4. Set permissions to 644
 
 ### 2. Configure Environment Variables
 
@@ -112,14 +115,14 @@ QUEUE_CONNECTION=sync
 ### 3. Set File Permissions
 
 **Via cPanel File Manager:**
-1. Navigate to `public_html/`
+1. Navigate to your FTP root directory (where files are deployed)
 2. Right-click `storage` folder → Change Permissions → Set to `755`
 3. Right-click `bootstrap/cache` folder → Change Permissions → Set to `755`
 4. Right-click `public` folder → Change Permissions → Set to `755`
 
 **Via SSH (if available):**
 ```bash
-cd ~/public_html
+cd /  # or your FTP root directory
 chmod -R 755 storage bootstrap/cache
 chmod -R 755 public
 ```
@@ -128,7 +131,7 @@ chmod -R 755 public
 
 **Via cPanel Terminal (if available):**
 ```bash
-cd ~/public_html
+cd /  # or your FTP root directory
 php artisan key:generate
 php artisan migrate --force
 php artisan config:cache
@@ -138,7 +141,7 @@ php artisan view:cache
 
 **Via SSH:**
 ```bash
-cd ~/public_html
+cd /  # or your FTP root directory where files are deployed
 php artisan key:generate
 php artisan migrate --force
 php artisan config:cache
