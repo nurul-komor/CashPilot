@@ -65,7 +65,7 @@ class GeminiClient
 
             // Build the correct API URL
             $url = "{$this->baseUrl}/models/{$model}:generateContent?key={$this->apiKey}";
-            
+
             $response = Http::timeout(config('gemini.timeout', 30))
                 ->post($url, [
                     'contents' => [

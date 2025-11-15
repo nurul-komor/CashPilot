@@ -1,0 +1,166 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  PHP_VERSION: '8.2'
+  NODE_VERSION: '20'
+
+jobs:
+  deploy:
+    name: Deploy to cPanel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, pdo, pdo_mysql, fileinfo, openssl, tokenizer, json, curl, zip, gd, dom, xml, ctype, iconv, intl, sqlite3
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Composer Dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Install NPM Dependencies
+        run: |
+          npm ci
+
+      - name: Build Assets
+        run: |
+          npm run build
+
+      - name: Create deployment package
+        run: |
+          # Create deployment directory
+          mkdir -p deploy
+
+          # Copy necessary files and directories
+          cp -r app bootstrap config database public resources routes artisan deploy/
+          cp composer.json composer.lock deploy/
+          cp -r vendor deploy/ 2>/dev/null || true
+
+          # Create storage directories structure
+          mkdir -p deploy/storage/{app,framework,logs}
+          mkdir -p deploy/storage/framework/{cache,sessions,views}
+          mkdir -p deploy/storage/app/{public,private}
+          mkdir -p deploy/bootstrap/cache
+
+          # Create .htaccess if it doesn't exist
+          if [ ! -f public/.htaccess ]; then
+            echo "Creating .htaccess file"
+            cat > deploy/public/.htaccess << 'EOF'
+          <IfModule mod_rewrite.c>
+              <IfModule mod_negotiation.c>
+                  Options -MultiViews -Indexes
+              </IfModule>
+              
+              RewriteEngine On
+              
+              # Handle Authorization Header
+              RewriteCond %{HTTP:Authorization} .
+              RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+              
+              # Redirect Trailing Slashes If Not A Folder...
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_URI} (.+)/$
+              RewriteRule ^ %1 [L,R=301]
+              
+              # Send Requests To Front Controller...
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteRule ^ index.php [L]
+          </IfModule>
+          EOF
+          else
+            cp public/.htaccess deploy/public/.htaccess
+          fi
+
+          # Create storage .gitkeep files
+          touch deploy/storage/logs/.gitkeep
+          touch deploy/storage/framework/cache/.gitkeep
+          touch deploy/storage/framework/sessions/.gitkeep
+          touch deploy/storage/framework/views/.gitkeep
+          touch deploy/storage/app/.gitkeep
+          touch deploy/storage/app/public/.gitkeep
+          touch deploy/storage/app/private/.gitkeep
+          touch deploy/bootstrap/cache/.gitkeep
+
+      - name: Deploy to cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.CPANEL_FTP_HOST }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          local-dir: ./deploy/
+          server-dir: ${{ secrets.CPANEL_DEPLOY_PATH || '/public_html/' }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env
+            **/.env.*
+            **/storage/logs/*
+            !**/storage/logs/.gitkeep
+            **/tests/**
+            **/node_modules/**
+            **/.github/**
+            **/deploy.sh
+            **/README.md
+            **/SETUP_PROGRESS.md
+            **/AI_SERVICES_SETUP.md
+            **/DEPLOYMENT.md
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "- Code checked out" >> $GITHUB_STEP_SUMMARY
+          echo "- Composer dependencies installed (production)" >> $GITHUB_STEP_SUMMARY
+          echo "- NPM dependencies installed" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend assets built" >> $GITHUB_STEP_SUMMARY
+          echo "- Deployment package created" >> $GITHUB_STEP_SUMMARY
+          echo "- Files deployed to cPanel via FTP" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Next Steps (via cPanel File Manager or SSH):" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Configure Environment:**" >> $GITHUB_STEP_SUMMARY
+          echo "   - Upload `.env` file to your server root" >> $GITHUB_STEP_SUMMARY
+          echo "   - Set your database credentials, app URL, and Gemini API key" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Set Permissions:**" >> $GITHUB_STEP_SUMMARY
+          echo "   ```bash" >> $GITHUB_STEP_SUMMARY
+          echo "   chmod -R 755 storage bootstrap/cache" >> $GITHUB_STEP_SUMMARY
+          echo "   chmod -R 755 public" >> $GITHUB_STEP_SUMMARY
+          echo "   ```" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Run Artisan Commands (via SSH or cPanel Terminal):**" >> $GITHUB_STEP_SUMMARY
+          echo "   ```bash" >> $GITHUB_STEP_SUMMARY
+          echo "   php artisan key:generate" >> $GITHUB_STEP_SUMMARY
+          echo "   php artisan migrate --force" >> $GITHUB_STEP_SUMMARY
+          echo "   php artisan config:cache" >> $GITHUB_STEP_SUMMARY
+          echo "   php artisan route:cache" >> $GITHUB_STEP_SUMMARY
+          echo "   php artisan view:cache" >> $GITHUB_STEP_SUMMARY
+          echo "   ```" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Verify Deployment:**" >> $GITHUB_STEP_SUMMARY
+          echo "   - Visit your website URL" >> $GITHUB_STEP_SUMMARY
+          echo "   - Check that all routes are working" >> $GITHUB_STEP_SUMMARY
+          echo "   - Verify database connection" >> $GITHUB_STEP_SUMMARY
+
