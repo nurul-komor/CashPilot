@@ -64,9 +64,9 @@ export default function ReportsIndex({ reportData, period }: ReportsIndexProps) 
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">
                         Financial Reports
-                    </h2>
+                </h2>
                     <div className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5 text-white shadow-md">
                         <Sparkles className="h-4 w-4 animate-pulse" />
                         <span className="text-sm font-medium">AI Powered</span>
