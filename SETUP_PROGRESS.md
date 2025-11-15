@@ -1,4 +1,4 @@
-# Personal Accounting System - Setup Progress
+# FinGenie - AI-Powered Personal Finance Management - Setup Progress
 
 ## ✅ Completed
 

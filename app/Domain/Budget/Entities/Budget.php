@@ -33,7 +33,7 @@ class Budget extends Model
 
     public function categories(): HasMany
     {
-        return $this->hasMany(BudgetCategory::class);
+        return $this->hasMany(\App\Domain\Budget\Entities\BudgetCategory::class);
     }
 }
 

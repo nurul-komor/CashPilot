@@ -5,8 +5,7 @@ namespace App\Presentation\Http\Controllers\Account;
 use App\Application\Account\Commands\CreateAccountCommand;
 use App\Application\Account\Commands\TransferAccountCommand;
 use App\Domain\Account\Repositories\AccountRepositoryInterface;
-use App\Domain\Bank\Repositories\BankRepositoryInterface;
-use App\Domain\Bank\Repositories\MobileBankingServiceRepositoryInterface;
+use App\Domain\Bank\Repositories\FinancialInstitutionRepositoryInterface;
 use App\Presentation\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,8 +15,7 @@ class AccountController extends Controller
 {
     public function __construct(
         private AccountRepositoryInterface $accountRepository,
-        private BankRepositoryInterface $bankRepository,
-        private MobileBankingServiceRepositoryInterface $mobileBankingServiceRepository,
+        private FinancialInstitutionRepositoryInterface $financialInstitutionRepository,
         private CreateAccountCommand $createAccountCommand,
         private TransferAccountCommand $transferAccountCommand
     ) {}
@@ -25,13 +23,20 @@ class AccountController extends Controller
     public function index(Request $request): Response
     {
         $accounts = $this->accountRepository->findByUserId($request->user()->id);
-        $banks = $this->bankRepository->findAllActive();
-        $mobileServices = $this->mobileBankingServiceRepository->findAllActive();
+        $financialInstitutions = $this->financialInstitutionRepository->findAllActive();
 
         return Inertia::render('Accounts/Index', [
             'accounts' => $accounts,
-            'banks' => $banks,
-            'mobileServices' => $mobileServices,
+            'financialInstitutions' => $financialInstitutions,
+        ]);
+    }
+
+    public function create(Request $request): Response
+    {
+        $financialInstitutions = $this->financialInstitutionRepository->findAllActive();
+
+        return Inertia::render('Accounts/Create', [
+            'financialInstitutions' => $financialInstitutions,
         ]);
     }
 
@@ -40,8 +45,7 @@ class AccountController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|in:cash,bank,credit_card,debit_card,mobile_banking,savings,investment,other',
-            'bank_id' => 'nullable|exists:banks,id',
-            'mobile_banking_service_id' => 'nullable|exists:mobile_banking_services,id',
+            'financial_institution_id' => 'nullable|exists:financial_institutions,id',
             'account_number' => 'nullable|string|max:255',
             'balance' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|max:3',
@@ -52,6 +56,15 @@ class AccountController extends Controller
         $account = ($this->createAccountCommand)($validated);
 
         return redirect()->route('accounts.index')->with('success', 'Account created successfully.');
+    }
+
+    public function transferForm(Request $request): Response
+    {
+        $accounts = $this->accountRepository->findByUserId($request->user()->id);
+
+        return Inertia::render('Accounts/Transfer', [
+            'accounts' => $accounts,
+        ]);
     }
 
     public function transfer(Request $request)
@@ -69,6 +82,72 @@ class AccountController extends Controller
         $result = ($this->transferAccountCommand)($validated);
 
         return redirect()->route('accounts.index')->with('success', 'Transfer completed successfully.');
+    }
+
+    public function show(Request $request, string $id): Response
+    {
+        $account = $this->accountRepository->findById((int) $id);
+
+        if (!$account || $account->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        return Inertia::render('Accounts/Show', [
+            'account' => $account,
+        ]);
+    }
+
+    public function edit(Request $request, string $id): Response
+    {
+        $account = $this->accountRepository->findById((int) $id);
+
+        if (!$account || $account->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        $financialInstitutions = $this->financialInstitutionRepository->findAllActive();
+
+        return Inertia::render('Accounts/Edit', [
+            'account' => $account,
+            'financialInstitutions' => $financialInstitutions,
+        ]);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $account = $this->accountRepository->findById((int) $id);
+
+        if (!$account || $account->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|in:cash,bank,credit_card,debit_card,mobile_banking,savings,investment,other',
+            'financial_institution_id' => 'nullable|exists:financial_institutions,id',
+            'account_number' => 'nullable|string|max:255',
+            'balance' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|max:3',
+            'status' => 'nullable|string|in:active,inactive,archived',
+            'notes' => 'nullable|string',
+        ]);
+
+        $this->accountRepository->update($account, $validated);
+
+        return redirect()->route('accounts.index')->with('success', 'Account updated successfully.');
+    }
+
+    public function destroy(Request $request, string $id)
+    {
+        $account = $this->accountRepository->findById((int) $id);
+
+        if (!$account || $account->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        $this->accountRepository->delete($account);
+
+        return redirect()->route('accounts.index')->with('success', 'Account deleted successfully.');
     }
 }
 

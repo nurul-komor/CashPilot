@@ -13,14 +13,14 @@ class RegisterUserCommand
 
     public function __invoke(array $data): array
     {
-        $data['password'] = Hash::make($data['password']);
-        $data['role'] = $data['role'] ?? 'student';
+        $user = $this->userRepository->create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'role' => $data['role'] ?? 'student',
+        ]);
 
-        $user = $this->userRepository->create($data);
-
-        return [
-            'user' => $user,
-        ];
+        return ['user' => $user];
     }
 }
 

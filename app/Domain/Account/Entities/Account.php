@@ -12,8 +12,7 @@ class Account extends Model
         'user_id',
         'name',
         'type',
-        'bank_id',
-        'mobile_banking_service_id',
+        'financial_institution_id',
         'account_number',
         'balance',
         'currency',
@@ -30,14 +29,9 @@ class Account extends Model
         return $this->belongsTo(\App\Models\User::class);
     }
 
-    public function bank(): BelongsTo
+    public function financialInstitution(): BelongsTo
     {
-        return $this->belongsTo(\App\Domain\Bank\Entities\Bank::class);
-    }
-
-    public function mobileBankingService(): BelongsTo
-    {
-        return $this->belongsTo(\App\Domain\Bank\Entities\MobileBankingService::class);
+        return $this->belongsTo(\App\Domain\Bank\Entities\FinancialInstitution::class);
     }
 
     public function transactions(): HasMany

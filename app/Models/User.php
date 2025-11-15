@@ -46,4 +46,57 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the Pusher Push Notification routing information for the given notification.
+     *
+     * @param  \Illuminate\Notifications\Notification  $notification
+     * @return string|array
+     */
+    public function routeNotificationForPusherPushNotifications($notification)
+    {
+        // Return array of interests to target this specific user
+        // Devices must subscribe to this interest to receive notifications
+        return ["user-{$this->id}"];
+    }
+
+    /**
+     * Get the user's profile.
+     */
+    public function profile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Get the user's education records.
+     */
+    public function education()
+    {
+        return $this->hasMany(Education::class);
+    }
+
+    /**
+     * Get the user's skills.
+     */
+    public function skills()
+    {
+        return $this->hasMany(Skill::class);
+    }
+
+    /**
+     * Get the user's work experiences.
+     */
+    public function workExperiences()
+    {
+        return $this->hasMany(WorkExperience::class);
+    }
+
+    /**
+     * Get the user's projects.
+     */
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
 }

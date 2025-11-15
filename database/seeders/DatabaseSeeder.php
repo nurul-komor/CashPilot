@@ -15,6 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed financial institutions (banks and mobile banking)
+        $this->call([
+            FinancialInstitutionSeeder::class,
+        ]);
+
         // User::factory(10)->create();
 
         User::factory()->create([

@@ -29,8 +29,8 @@ class Transaction extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'transaction_date' => 'date',
-        'recurring_end_date' => 'date',
         'is_recurring' => 'boolean',
+        'recurring_end_date' => 'date',
     ];
 
     public function user(): BelongsTo

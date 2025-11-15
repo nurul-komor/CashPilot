@@ -4,7 +4,6 @@ namespace App\Application\Budget\Commands;
 
 use App\Domain\Budget\Repositories\BudgetRepositoryInterface;
 use App\Domain\Budget\Entities\BudgetCategory;
-use Illuminate\Support\Facades\DB;
 
 class CreateBudgetCommand
 {
@@ -14,16 +13,13 @@ class CreateBudgetCommand
 
     public function __invoke(array $data): \App\Domain\Budget\Entities\Budget
     {
-        return DB::transaction(function () use ($data) {
-            $categoryAllocations = $data['category_allocations'] ?? [];
-            unset($data['category_allocations']);
+        $categoryAllocations = $data['category_allocations'] ?? [];
+        unset($data['category_allocations']);
 
-            $data['currency'] = $data['currency'] ?? 'BDT';
-            $data['is_active'] = $data['is_active'] ?? true;
+        $budget = $this->budgetRepository->create($data);
 
-            $budget = $this->budgetRepository->create($data);
-
-            // Create budget categories
+        // Create category allocations if provided
+        if (!empty($categoryAllocations)) {
             foreach ($categoryAllocations as $allocation) {
                 BudgetCategory::create([
                     'budget_id' => $budget->id,
@@ -32,9 +28,9 @@ class CreateBudgetCommand
                     'spent_amount' => 0,
                 ]);
             }
+        }
 
-            return $budget->fresh();
-        });
+        return $budget;
     }
 }
 
