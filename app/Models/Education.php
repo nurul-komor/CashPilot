@@ -38,3 +38,4 @@ class Education extends Model
 }
 
 
+

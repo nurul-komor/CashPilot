@@ -6,6 +6,14 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#a855f7"/>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="FinGenie">
+        <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+        <link rel="manifest" href="{{ asset('/manifest.json') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -18,5 +26,24 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+
+        <!-- PWA Service Worker -->
+        <script src="{{ asset('/sw.js') }}"></script>
+        <script>
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", function() {
+                    navigator.serviceWorker.register("/sw.js").then(
+                        function(registration) {
+                            console.log("Service worker registration succeeded:", registration);
+                        },
+                        function(error) {
+                            console.error("Service worker registration failed:", error);
+                        }
+                    );
+                });
+            } else {
+                console.error("Service workers are not supported.");
+            }
+        </script>
     </body>
 </html>
