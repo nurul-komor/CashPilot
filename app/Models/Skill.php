@@ -23,3 +23,4 @@ class Skill extends Model
     }
 }
 
+
