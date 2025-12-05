@@ -9,8 +9,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Plus, Eye, Edit, Wallet } from 'lucide-react';
+import { Plus, Eye, EyeOff, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 interface AccountsIndexProps {
     accounts: Account[];
@@ -18,6 +19,29 @@ interface AccountsIndexProps {
 }
 
 export default function AccountsIndex({ accounts, financialInstitutions }: AccountsIndexProps) {
+    const [visibleAccountNumbers, setVisibleAccountNumbers] = useState<Set<number>>(new Set());
+
+    const toggleAccountNumberVisibility = (accountId: number) => {
+        setVisibleAccountNumbers((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(accountId)) {
+                newSet.delete(accountId);
+            } else {
+                newSet.add(accountId);
+            }
+            return newSet;
+        });
+    };
+
+    const maskAccountNumber = (accountNumber: string): string => {
+        if (accountNumber.length <= 4) {
+            return '***' + accountNumber;
+        }
+        const lastFour = accountNumber.slice(-4);
+        const masked = '*'.repeat(Math.max(accountNumber.length - 4, 3));
+        return masked + lastFour;
+    };
+
     const getStatusBadge = (status: string) => {
         const colors = {
             active: 'bg-green-100 text-green-800',
@@ -100,9 +124,24 @@ export default function AccountsIndex({ accounts, financialInstitutions }: Accou
                                                 </TableCell>
                                                 <TableCell>
                                                     {account.account_number ? (
-                                                        <span className="text-sm text-gray-600 font-mono">
-                                                            {account.account_number}
-                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-600 font-mono">
+                                                                {visibleAccountNumbers.has(account.id)
+                                                                    ? account.account_number
+                                                                    : maskAccountNumber(account.account_number)}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => toggleAccountNumberVisibility(account.id)}
+                                                                className="text-gray-500 hover:text-gray-700 transition-colors"
+                                                                type="button"
+                                                            >
+                                                                {visibleAccountNumbers.has(account.id) ? (
+                                                                    <EyeOff className="h-4 w-4" />
+                                                                ) : (
+                                                                    <Eye className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        </div>
                                                     ) : (
                                                         <span className="text-sm text-gray-400">—</span>
                                                     )}
@@ -159,8 +198,24 @@ export default function AccountsIndex({ accounts, financialInstitutions }: Accou
                                                 <span className="font-medium">Type:</span> {getTypeLabel(account.type)}
                                             </div>
                                             {account.account_number && (
-                                                <div>
-                                                    <span className="font-medium">Account Number:</span> {account.account_number}
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium">Account Number:</span>
+                                                    <span className="font-mono">
+                                                        {visibleAccountNumbers.has(account.id)
+                                                            ? account.account_number
+                                                            : maskAccountNumber(account.account_number)}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => toggleAccountNumberVisibility(account.id)}
+                                                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                                                        type="button"
+                                                    >
+                                                        {visibleAccountNumbers.has(account.id) ? (
+                                                            <EyeOff className="h-4 w-4" />
+                                                        ) : (
+                                                            <Eye className="h-4 w-4" />
+                                                        )}
+                                                    </button>
                                                 </div>
                                             )}
                                             <div>
