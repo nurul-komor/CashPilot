@@ -31,18 +31,31 @@ class DashboardController extends Controller
         $budgets = $this->budgetRepository->findByUserId($user->id);
         $goals = $this->goalRepository->findByUserId($user->id);
 
-        // Calculate summary
-        $totalIncome = $this->transactionRepository->findByUserId($user->id, [
-            'type' => 'income',
-            'start_date' => now()->startOfMonth()->format('Y-m-d'),
-            'end_date' => now()->endOfMonth()->format('Y-m-d'),
-        ])->sum('amount');
+        // Calculate summary - include income, savings, and general as positive transactions
+        $startDate = now()->startOfMonth()->format('Y-m-d');
+        $endDate = now()->endOfMonth()->format('Y-m-d');
 
-        $totalExpense = $this->transactionRepository->findByUserId($user->id, [
-            'type' => 'expense',
-            'start_date' => now()->startOfMonth()->format('Y-m-d'),
-            'end_date' => now()->endOfMonth()->format('Y-m-d'),
-        ])->sum('amount');
+        $allTransactions = $this->transactionRepository->findByUserId($user->id, [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+
+        $totalIncome = (float) $allTransactions->whereIn('type', ['income', 'savings', 'general'])->sum('amount');
+        $totalExpense = (float) $allTransactions->where('type', 'expense')->sum('amount');
+        $netBalance = $totalIncome - $totalExpense;
+
+        // Ensure netBalance is valid
+        if (!is_numeric($netBalance) || is_nan($netBalance) || is_infinite($netBalance)) {
+            $netBalance = 0;
+        }
+
+        // Calculate savings rate: (Net Savings / Total Income) * 100
+        $savingsRate = $totalIncome > 0 ? ($netBalance / $totalIncome) * 100 : 0;
+
+        // Ensure savings rate is valid
+        if (!is_numeric($savingsRate) || is_nan($savingsRate) || is_infinite($savingsRate)) {
+            $savingsRate = 0;
+        }
 
         return Inertia::render('Dashboard', [
             'accounts' => $accounts,
@@ -50,10 +63,10 @@ class DashboardController extends Controller
             'budgets' => $budgets,
             'goals' => $goals,
             'summary' => [
-                'total_income' => $totalIncome,
-                'total_expense' => $totalExpense,
-                'net_balance' => $totalIncome - $totalExpense,
-                'savings_rate' => $totalIncome > 0 ? (($totalIncome - $totalExpense) / $totalIncome) * 100 : 0,
+                'total_income' => (float) $totalIncome,
+                'total_expense' => (float) $totalExpense,
+                'net_balance' => (float) $netBalance,
+                'savings_rate' => round($savingsRate, 2),
             ],
         ]);
     }

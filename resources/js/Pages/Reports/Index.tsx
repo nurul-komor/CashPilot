@@ -1,8 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Cell, Area, AreaChart, YAxis } from 'recharts';
+// @ts-ignore - chart.jsx doesn't have type definitions
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
-import { Sparkles, TrendingUp, TrendingDown, DollarSign, Calendar } from 'lucide-react';
+import { Sparkles, TrendingUp, TrendingDown, DollarSign, Calendar, Lightbulb, AlertTriangle, Target, BarChart3, CheckCircle2, ChevronDown, PiggyBank } from 'lucide-react';
+import { Disclosure } from '@headlessui/react';
 
 interface ReportData {
     insights: {
@@ -137,12 +139,12 @@ export default function ReportsIndex({ reportData, period }: ReportsIndexProps) 
                         <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200 p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600">Savings Rate</p>
-                                    <p className="mt-2 text-2xl font-bold text-blue-600">
-                                        {summary.savings_rate.toFixed(1)}%
+                                    <p className="text-sm font-medium text-gray-600">Savings Amount</p>
+                                    <p className={`mt-2 text-2xl font-bold ${(summary.net_savings || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ৳{summary?.net_savings?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
                                     </p>
                                 </div>
-                                <Sparkles className="h-8 w-8 text-blue-500" />
+                                <PiggyBank className={`h-8 w-8 ${(summary.net_savings || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`} />
                             </div>
                         </div>
                     </div>
@@ -186,7 +188,7 @@ export default function ReportsIndex({ reportData, period }: ReportsIndexProps) 
                                         outerRadius={100}
                                         label
                                     >
-                                        {charts.categories.map((entry, index) => (
+                                        {charts.categories.map((_, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
@@ -230,69 +232,202 @@ export default function ReportsIndex({ reportData, period }: ReportsIndexProps) 
                         </ChartContainer>
                     </div>
 
-                    {/* AI Insights */}
+                    {/* AI Insights & Recommendations */}
                     {insights && (
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                            {insights.spending_trends && (
-                                <div className="overflow-hidden rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 p-6">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Sparkles className="h-5 w-5 text-purple-500" />
-                                        <h3 className="text-lg font-semibold text-gray-900">Spending Trends</h3>
-                                    </div>
-                                    <p className="text-sm text-gray-700">{insights.spending_trends}</p>
-                                </div>
-                            )}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="h-6 w-6 text-purple-600" />
+                                <h2 className="text-2xl font-bold text-gray-900">AI Insights & Recommendations</h2>
+                            </div>
 
-                            {insights.savings_opportunities && insights.savings_opportunities.length > 0 && (
-                                <div className="overflow-hidden rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-6">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <TrendingUp className="h-5 w-5 text-green-500" />
-                                        <h3 className="text-lg font-semibold text-gray-900">Savings Opportunities</h3>
-                                    </div>
-                                    <ul className="space-y-2">
-                                        {insights.savings_opportunities.map((opportunity, index) => (
-                                            <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
-                                                <span className="text-green-500 mt-1">•</span>
-                                                <span>{opportunity}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
+                            <div className="space-y-2">
+                                {/* Top Spending Categories */}
+                                {charts.categories && charts.categories.length > 0 && (
+                                    <Disclosure>
+                                        {({ open }) => (
+                                            <div className="overflow-hidden rounded-lg bg-white border border-gray-200 shadow-sm">
+                                                <Disclosure.Button className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-indigo-100 rounded-lg">
+                                                            <BarChart3 className="h-5 w-5 text-indigo-600" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-lg font-semibold text-gray-900">Top Spending Categories</h3>
+                                                            <p className="text-sm text-gray-500 mt-0.5">
+                                                                {charts.categories?.length ?? 0} categories
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronDown
+                                                        className={`h-5 w-5 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
+                                                    />
+                                                </Disclosure.Button>
+                                                <Disclosure.Panel className="px-4 pb-4 pt-2">
+                                                    <div className="space-y-2">
+                                                        {charts.categories.slice(0, 5).map((category, index) => {
+                                                            const amount = category?.value ?? 0;
+                                                            const categoryName = category?.name ?? 'Uncategorized';
+                                                            const displayAmount = Number.isNaN(Number(amount)) || amount === null || amount === undefined ? 0 : Number(amount);
+                                                            return (
+                                                                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                                                        <span className="font-medium text-gray-900">{categoryName}</span>
+                                                                    </div>
+                                                                    <span className="font-semibold text-gray-700">
+                                                                        ৳{displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </Disclosure.Panel>
+                                            </div>
+                                        )}
+                                    </Disclosure>
+                                )}
 
-                            {insights.recommendations && insights.recommendations.length > 0 && (
-                                <div className="overflow-hidden rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 p-6">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Sparkles className="h-5 w-5 text-blue-500" />
-                                        <h3 className="text-lg font-semibold text-gray-900">AI Recommendations</h3>
-                                    </div>
-                                    <ul className="space-y-2">
-                                        {insights.recommendations.map((recommendation, index) => (
-                                            <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
-                                                <span className="text-blue-500 mt-1">•</span>
-                                                <span>{recommendation}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
+                                {/* Spending Trends */}
+                                {insights.spending_trends && (
+                                    <Disclosure>
+                                        {({ open }) => (
+                                            <div className="overflow-hidden rounded-lg bg-white border border-gray-200 shadow-sm">
+                                                <Disclosure.Button className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-purple-100 rounded-lg">
+                                                            <TrendingUp className="h-5 w-5 text-purple-600" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-lg font-semibold text-gray-900">Spending Analysis</h3>
+                                                            <p className="text-sm text-gray-500 mt-0.5">Detailed spending trends and patterns</p>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronDown
+                                                        className={`h-5 w-5 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
+                                                    />
+                                                </Disclosure.Button>
+                                                <Disclosure.Panel className="px-4 pb-4 pt-2">
+                                                    <div className="prose prose-sm max-w-none">
+                                                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                                            {insights.spending_trends}
+                                                        </p>
+                                                    </div>
+                                                </Disclosure.Panel>
+                                            </div>
+                                        )}
+                                    </Disclosure>
+                                )}
 
-                            {insights.alerts && insights.alerts.length > 0 && (
-                                <div className="overflow-hidden rounded-lg bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-6">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <TrendingDown className="h-5 w-5 text-red-500" />
-                                        <h3 className="text-lg font-semibold text-gray-900">Alerts</h3>
-                                    </div>
-                                    <ul className="space-y-2">
-                                        {insights.alerts.map((alert, index) => (
-                                            <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
-                                                <span className="text-red-500 mt-1">•</span>
-                                                <span>{alert}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
+                                {/* Savings Opportunities */}
+                                {insights.savings_opportunities && insights.savings_opportunities.length > 0 && (
+                                    <Disclosure>
+                                        {({ open }) => (
+                                            <div className="overflow-hidden rounded-lg bg-white border border-gray-200 shadow-sm">
+                                                <Disclosure.Button className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-green-100 rounded-lg">
+                                                            <Target className="h-5 w-5 text-green-600" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-lg font-semibold text-gray-900">Savings Opportunities</h3>
+                                                            <p className="text-sm text-gray-500 mt-0.5">
+                                                                {insights.savings_opportunities?.length ?? 0} opportunity{(insights.savings_opportunities?.length ?? 0) > 1 ? 'ies' : 'y'} identified
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronDown
+                                                        className={`h-5 w-5 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
+                                                    />
+                                                </Disclosure.Button>
+                                                <Disclosure.Panel className="px-4 pb-4 pt-2">
+                                                    <div className="space-y-2">
+                                                        {(insights.savings_opportunities ?? []).map((opportunity, index) => (
+                                                            <div key={index} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                                                                <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                                                                <p className="text-sm text-gray-700 leading-relaxed">{opportunity}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </Disclosure.Panel>
+                                            </div>
+                                        )}
+                                    </Disclosure>
+                                )}
+
+                                {/* AI Recommendations */}
+                                {insights.recommendations && insights.recommendations.length > 0 && (
+                                    <Disclosure defaultOpen>
+                                        {({ open }) => (
+                                            <div className="overflow-hidden rounded-lg bg-white border border-gray-200 shadow-sm">
+                                                <Disclosure.Button className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-blue-100 rounded-lg">
+                                                            <Lightbulb className="h-5 w-5 text-blue-600" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-lg font-semibold text-gray-900">Actionable Recommendations</h3>
+                                                            <p className="text-sm text-gray-500 mt-0.5">
+                                                                {insights.recommendations?.length ?? 0} recommendation{(insights.recommendations?.length ?? 0) > 1 ? 's' : ''} for you
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronDown
+                                                        className={`h-5 w-5 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
+                                                    />
+                                                </Disclosure.Button>
+                                                <Disclosure.Panel className="px-4 pb-4 pt-2">
+                                                    <div className="space-y-2">
+                                                        {(insights.recommendations ?? []).map((recommendation, index) => (
+                                                            <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold mt-0.5">
+                                                                    {index + 1}
+                                                                </div>
+                                                                <p className="text-sm text-gray-700 leading-relaxed">{recommendation}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </Disclosure.Panel>
+                                            </div>
+                                        )}
+                                    </Disclosure>
+                                )}
+
+                                {/* Alerts */}
+                                {insights.alerts && insights.alerts.length > 0 && (
+                                    <Disclosure defaultOpen>
+                                        {({ open }) => (
+                                            <div className="overflow-hidden rounded-lg bg-white border-2 border-red-200 shadow-sm">
+                                                <Disclosure.Button className="flex w-full items-center justify-between p-4 text-left hover:bg-red-50 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-red-100 rounded-lg">
+                                                            <AlertTriangle className="h-5 w-5 text-red-600" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-lg font-semibold text-gray-900">Important Alerts</h3>
+                                                            <p className="text-sm text-red-600 mt-0.5">
+                                                                {insights.alerts?.length ?? 0} alert{(insights.alerts?.length ?? 0) > 1 ? 's' : ''} require{(insights.alerts?.length ?? 0) > 1 ? '' : 's'} attention
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronDown
+                                                        className={`h-5 w-5 text-red-500 transition-transform ${open ? 'rotate-180' : ''}`}
+                                                    />
+                                                </Disclosure.Button>
+                                                <Disclosure.Panel className="px-4 pb-4 pt-2">
+                                                    <div className="space-y-2">
+                                                        {(insights.alerts ?? []).map((alert, index) => (
+                                                            <div key={index} className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
+                                                                <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                                                <p className="text-sm text-gray-700 leading-relaxed font-medium">{alert}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </Disclosure.Panel>
+                                            </div>
+                                        )}
+                                    </Disclosure>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

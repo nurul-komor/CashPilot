@@ -33,8 +33,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Accounts
-    Route::resource('accounts', \App\Presentation\Http\Controllers\Account\AccountController::class);
     Route::get('accounts/transfer', [\App\Presentation\Http\Controllers\Account\AccountController::class, 'transferForm'])->name('accounts.transfer');
+    Route::resource('accounts', \App\Presentation\Http\Controllers\Account\AccountController::class);
     Route::post('accounts/transfer', [\App\Presentation\Http\Controllers\Account\AccountController::class, 'transfer'])->name('accounts.transfer.store');
 
     // Transactions
@@ -47,7 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('goals', \App\Presentation\Http\Controllers\Goal\GoalController::class);
 
     // Categories
-    Route::resource('categories', \App\Presentation\Http\Controllers\Category\CategoryController::class)->only(['index']);
+    Route::resource('categories', \App\Presentation\Http\Controllers\Category\CategoryController::class)->only(['index', 'store']);
 
     // Tags
     Route::resource('tags', \App\Presentation\Http\Controllers\Tag\TagController::class)->only(['index']);

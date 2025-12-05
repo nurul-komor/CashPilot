@@ -20,10 +20,15 @@ const filesToCache = [
 const checkResponse = function (request) {
     return new Promise(function (fulfill, reject) {
         fetch(request).then(function (response) {
-            if (response.status !== 404) {
+            // Allow redirects (302, 301) and successful responses (200-299)
+            // Only reject on 404 or network errors
+            if (response.status === 404) {
+                reject();
+            } else if (response.status >= 200 && response.status < 400) {
                 fulfill(response);
             } else {
-                reject();
+                // For other status codes, try to fulfill but let the app handle it
+                fulfill(response);
             }
         }, reject);
     });
@@ -55,6 +60,30 @@ const returnFromCache = function (request) {
 };
 
 self.addEventListener("fetch", function (event) {
+    const url = new URL(event.request.url);
+
+    // Skip service worker for API routes
+    if (url.pathname.startsWith('/api/')) {
+        return;
+    }
+
+    // Skip service worker for POST/PUT/DELETE/PATCH requests
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
+    // Skip service worker for authenticated routes that might redirect
+    // Let the browser handle these normally
+    if (url.pathname.startsWith('/accounts/') ||
+        url.pathname.startsWith('/transactions/') ||
+        url.pathname.startsWith('/budgets/') ||
+        url.pathname.startsWith('/goals/') ||
+        url.pathname.startsWith('/profile') ||
+        url.pathname.startsWith('/settings') ||
+        url.pathname.startsWith('/reports')) {
+        return;
+    }
+
     event.respondWith(checkResponse(event.request).catch(function () {
         return returnFromCache(event.request);
     }));

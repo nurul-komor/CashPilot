@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Account, Transaction, Budget, FinancialGoal, DashboardSummary } from '@/types';
-import { Sparkles, Brain } from 'lucide-react';
+import { Sparkles, Brain, ArrowLeftRight, TrendingUp, TrendingDown, DollarSign, Target, Wallet, Plus, ArrowUpRight, ArrowDownRight, ArrowLeftRight as ArrowLeftRightIcon, PiggyBank, Receipt } from 'lucide-react';
 
 interface DashboardProps {
     accounts: Account[];
@@ -32,35 +32,71 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                 <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
                     {/* Summary Cards */}
                     <div className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                        <div className="overflow-hidden rounded-lg bg-white shadow">
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
                             <div className="p-4 sm:p-6">
-                                <div className="text-xs font-medium text-gray-500 sm:text-sm">Total Income (This Month)</div>
-                                <div className="mt-2 text-xl font-semibold text-green-600 sm:text-2xl">
-                                    ৳{summary?.total_income?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-medium text-gray-500 sm:text-sm">Total Income</p>
+                                        <p className="mt-2 text-xl font-bold text-green-600 sm:text-2xl">
+                                            ৳{summary?.total_income?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
+                                        </p>
+                                        <p className="mt-1 text-xs text-gray-500">This Month</p>
+                                    </div>
+                                    <div className="p-3 bg-green-100 rounded-lg">
+                                        <TrendingUp className="h-6 w-6 text-green-600 sm:h-8 sm:w-8" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="overflow-hidden rounded-lg bg-white shadow">
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
                             <div className="p-4 sm:p-6">
-                                <div className="text-xs font-medium text-gray-500 sm:text-sm">Total Expense (This Month)</div>
-                                <div className="mt-2 text-xl font-semibold text-red-600 sm:text-2xl">
-                                    ৳{summary?.total_expense?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-medium text-gray-500 sm:text-sm">Total Expense</p>
+                                        <p className="mt-2 text-xl font-bold text-red-600 sm:text-2xl">
+                                            ৳{summary?.total_expense?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
+                                        </p>
+                                        <p className="mt-1 text-xs text-gray-500">This Month</p>
+                                    </div>
+                                    <div className="p-3 bg-red-100 rounded-lg">
+                                        <TrendingDown className="h-6 w-6 text-red-600 sm:h-8 sm:w-8" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="overflow-hidden rounded-lg bg-white shadow">
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
                             <div className="p-4 sm:p-6">
-                                <div className="text-xs font-medium text-gray-500 sm:text-sm">Net Balance</div>
-                                <div className={`mt-2 text-xl font-semibold sm:text-2xl ${(summary?.net_balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    ৳{summary?.net_balance?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-medium text-gray-500 sm:text-sm">Net Balance</p>
+                                        <p className={`mt-2 text-xl font-bold sm:text-2xl ${(summary?.net_balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            ৳{summary?.net_balance?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || '0.00'}
+                                        </p>
+                                        <p className="mt-1 text-xs text-gray-500">This Month</p>
+                                    </div>
+                                    <div className={`p-3 rounded-lg ${(summary?.net_balance || 0) >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                                        <DollarSign className={`h-6 w-6 sm:h-8 sm:w-8 ${(summary?.net_balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="overflow-hidden rounded-lg bg-white shadow">
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
                             <div className="p-4 sm:p-6">
-                                <div className="text-xs font-medium text-gray-500 sm:text-sm">Savings Rate</div>
-                                <div className="mt-2 text-xl font-semibold text-blue-600 sm:text-2xl">
-                                    {summary?.savings_rate?.toFixed(1) || '0.0'}%
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-medium text-gray-500 sm:text-sm">Savings Amount</p>
+                                        <p className={`mt-2 text-xl font-bold sm:text-2xl ${(summary?.net_balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            {(() => {
+                                                const amount = summary?.net_balance ?? 0;
+                                                const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount)) || 0;
+                                                return `৳${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                            })()}
+                                        </p>
+                                        <p className="mt-1 text-xs text-gray-500">This Month</p>
+                                    </div>
+                                    <div className={`p-3 rounded-lg ${(summary?.net_balance || 0) >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                                        <PiggyBank className={`h-6 w-6 sm:h-8 sm:w-8 ${(summary?.net_balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -91,27 +127,21 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                                     href={route('transactions.create')}
                                     className="flex flex-col items-center justify-center rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50 active:bg-gray-100 sm:p-4"
                                 >
-                                    <svg className="mb-1.5 h-6 w-6 text-green-600 sm:mb-2 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
+                                    <Plus className="mb-1.5 h-6 w-6 text-green-600 sm:mb-2 sm:h-8 sm:w-8" />
                                     <span className="text-xs font-medium text-gray-700 text-center leading-tight sm:text-sm sm:leading-normal">Add Transaction</span>
                                 </Link>
                                 <Link
                                     href={route('accounts.create')}
                                     className="flex flex-col items-center justify-center rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50 active:bg-gray-100 sm:p-4"
                                 >
-                                    <svg className="mb-1.5 h-6 w-6 text-blue-600 sm:mb-2 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
+                                    <Plus className="mb-1.5 h-6 w-6 text-blue-600 sm:mb-2 sm:h-8 sm:w-8" />
                                     <span className="text-xs font-medium text-gray-700 text-center leading-tight sm:text-sm sm:leading-normal">Add Account</span>
                                 </Link>
                                 <Link
-                                    href={route('accounts.transfer')}
+                                    href="/accounts/transfer"
                                     className="flex flex-col items-center justify-center rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50 active:bg-gray-100 sm:p-4"
                                 >
-                                    <svg className="mb-1.5 h-6 w-6 text-purple-600 sm:mb-2 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                    </svg>
+                                    <ArrowLeftRight className="mb-1.5 h-6 w-6 text-purple-600 sm:mb-2 sm:h-8 sm:w-8" />
                                     <span className="text-xs font-medium text-gray-700 text-center leading-tight sm:text-sm sm:leading-normal">Transfer</span>
                                 </Link>
                                 <Link
@@ -145,12 +175,15 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
                         {/* Accounts Overview */}
-                        <div className="overflow-hidden rounded-lg bg-white shadow">
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
                             <div className="p-4 sm:p-6">
-                                <div className="mb-3 flex items-center justify-between sm:mb-4">
-                                    <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Accounts</h3>
+                                <div className="mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Wallet className="h-5 w-5 text-blue-600" />
+                                        <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Accounts</h3>
+                                    </div>
                                     <Link
                                         href={route('accounts.index')}
                                         className="text-xs font-medium text-blue-600 hover:text-blue-800 sm:text-sm"
@@ -159,12 +192,12 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                                     </Link>
                                 </div>
                                 {accounts && accounts.length > 0 ? (
-                                    <div className="space-y-2 sm:space-y-3">
+                                    <div className="space-y-3">
                                         {accounts.slice(0, 5).map((account) => (
-                                            <div key={account.id} className="flex items-center justify-between border-b border-gray-100 pb-2 sm:pb-3 last:border-0">
+                                            <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                                                 <div className="flex-1 min-w-0 pr-2">
                                                     <div className="text-sm font-medium text-gray-900 truncate sm:text-base">{account.name}</div>
-                                                    <div className="text-xs text-gray-500 sm:text-sm">{account.type}</div>
+                                                    <div className="text-xs text-gray-500 sm:text-sm capitalize">{account.type}</div>
                                                 </div>
                                                 <div className="text-right shrink-0">
                                                     <div className="text-sm font-semibold text-gray-900 sm:text-base">
@@ -177,6 +210,7 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                                     </div>
                                 ) : (
                                     <div className="py-6 text-center sm:py-8">
+                                        <Wallet className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                                         <p className="text-sm text-gray-500 sm:text-base">No accounts yet</p>
                                         <Link
                                             href={route('accounts.create')}
@@ -190,10 +224,13 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                         </div>
 
                         {/* Recent Transactions */}
-                        <div className="overflow-hidden rounded-lg bg-white shadow">
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
                             <div className="p-4 sm:p-6">
-                                <div className="mb-3 flex items-center justify-between sm:mb-4">
-                                    <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Recent Transactions</h3>
+                                <div className="mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Receipt className="h-5 w-5 text-green-600" />
+                                        <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Recent Transactions</h3>
+                                    </div>
                                     <Link
                                         href={route('transactions.index')}
                                         className="text-xs font-medium text-blue-600 hover:text-blue-800 sm:text-sm"
@@ -202,30 +239,53 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                                     </Link>
                                 </div>
                                 {recentTransactions && recentTransactions.length > 0 ? (
-                                    <div className="space-y-2 sm:space-y-3">
-                                        {recentTransactions.map((transaction) => (
-                                            <div key={transaction.id} className="flex items-center justify-between border-b border-gray-100 pb-2 sm:pb-3 last:border-0">
-                                                <div className="flex-1 min-w-0 pr-2">
-                                                    <div className="text-sm font-medium text-gray-900 truncate sm:text-base">
-                                                        {transaction.description || 'No description'}
+                                    <div className="space-y-3">
+                                        {recentTransactions.map((transaction) => {
+                                            const getTypeIcon = () => {
+                                                switch (transaction.type) {
+                                                    case 'income':
+                                                        return <ArrowUpRight className="h-4 w-4 text-green-600" />;
+                                                    case 'expense':
+                                                        return <ArrowDownRight className="h-4 w-4 text-red-600" />;
+                                                    case 'transfer':
+                                                        return <ArrowLeftRightIcon className="h-4 w-4 text-blue-600" />;
+                                                    default:
+                                                        return null;
+                                                }
+                                            };
+                                            return (
+                                                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                                    <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
+                                                        <div className="shrink-0">
+                                                            {getTypeIcon()}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-sm font-medium text-gray-900 truncate sm:text-base">
+                                                                {transaction.description || 'No description'}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 sm:text-sm">
+                                                                {new Date(transaction.transaction_date).toLocaleDateString('en-US', {
+                                                                    month: 'short',
+                                                                    day: 'numeric'
+                                                                })}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-xs text-gray-500 sm:text-sm">
-                                                        {new Date(transaction.transaction_date).toLocaleDateString()}
+                                                    <div className={`text-right shrink-0 text-sm font-semibold sm:text-base ${
+                                                        transaction.type === 'income' ? 'text-green-600' :
+                                                        transaction.type === 'expense' ? 'text-red-600' :
+                                                        'text-blue-600'
+                                                    }`}>
+                                                        {transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''}
+                                                        ৳{parseFloat(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                     </div>
                                                 </div>
-                                                <div className={`text-right shrink-0 text-sm font-semibold sm:text-base ${
-                                                    transaction.type === 'income' ? 'text-green-600' :
-                                                    transaction.type === 'expense' ? 'text-red-600' :
-                                                    'text-blue-600'
-                                                }`}>
-                                                    {transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''}
-                                                    ৳{parseFloat(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : (
                                     <div className="py-6 text-center sm:py-8">
+                                        <Receipt className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                                         <p className="text-sm text-gray-500 sm:text-base">No transactions yet</p>
                                         <Link
                                             href={route('transactions.create')}
@@ -235,6 +295,114 @@ export default function Dashboard({ accounts, recentTransactions, budgets, goals
                                         </Link>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Budgets & Goals */}
+                        <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200">
+                            <div className="p-4 sm:p-6">
+                                <div className="mb-4 flex items-center gap-2">
+                                    <Target className="h-5 w-5 text-orange-600" />
+                                    <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Budgets & Goals</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    {/* Active Budgets */}
+                                    {budgets && budgets.length > 0 ? (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Active Budgets</h4>
+                                            <div className="space-y-2">
+                                                {budgets.slice(0, 3).map((budget) => {
+                                                    const firstCategory = budget.categories?.[0];
+                                                    return (
+                                                        <div key={budget.id} className="p-2 bg-orange-50 rounded-lg border border-orange-100">
+                                                            <div className="text-xs font-medium text-gray-900 truncate">
+                                                                {budget.name}
+                                                            </div>
+                                                            <div className="text-xs text-gray-600 mt-0.5">
+                                                                ৳{parseFloat(budget.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}/{budget.period_type === 'monthly' ? 'month' : 'year'}
+                                                            </div>
+                                                            {firstCategory && (
+                                                                <div className="text-xs text-gray-500 mt-1">
+                                                                    {firstCategory.category?.name || 'Uncategorized'}: ৳{parseFloat(firstCategory.allocated_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            {budgets.length > 3 && (
+                                                <Link
+                                                    href={route('budgets.index')}
+                                                    className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-800"
+                                                >
+                                                    View {budgets.length - 3} more →
+                                                </Link>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="py-4 text-center">
+                                            <p className="text-xs text-gray-500">No budgets set</p>
+                                            <Link
+                                                href={route('budgets.create')}
+                                                className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                                            >
+                                                Create budget
+                                            </Link>
+                                        </div>
+                                    )}
+
+                                    {/* Financial Goals */}
+                                    {goals && goals.length > 0 ? (
+                                        <div className="pt-4 border-t border-gray-200">
+                                            <h4 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Goals</h4>
+                                            <div className="space-y-2">
+                                                {goals.slice(0, 3).map((goal) => {
+                                                    const currentAmount = parseFloat(goal.current_amount);
+                                                    const targetAmount = parseFloat(goal.target_amount);
+                                                    const progress = targetAmount > 0 ? (currentAmount / targetAmount) * 100 : 0;
+                                                    return (
+                                                        <div key={goal.id} className="p-2 bg-yellow-50 rounded-lg border border-yellow-100">
+                                                            <div className="text-xs font-medium text-gray-900 truncate">
+                                                                {goal.name}
+                                                            </div>
+                                                            <div className="mt-1.5">
+                                                                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                                                    <span>৳{currentAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                                                    <span>৳{targetAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                                                </div>
+                                                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                                                    <div
+                                                                        className="bg-yellow-600 h-1.5 rounded-full transition-all"
+                                                                        style={{ width: `${Math.min(progress, 100)}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 mt-0.5">{progress.toFixed(0)}%</div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            {goals.length > 3 && (
+                                                <Link
+                                                    href={route('goals.index')}
+                                                    className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-800"
+                                                >
+                                                    View {goals.length - 3} more →
+                                                </Link>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="pt-4 border-t border-gray-200 py-4 text-center">
+                                            <p className="text-xs text-gray-500">No goals set</p>
+                                            <Link
+                                                href={route('goals.create')}
+                                                className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                                            >
+                                                Set a goal
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

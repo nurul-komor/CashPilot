@@ -37,7 +37,10 @@ class TransactionRepository implements TransactionRepositoryInterface
             $query->where('category_id', $filters['category_id']);
         }
 
-        return $query->orderBy('transaction_date', 'desc')->get();
+        return $query->with(['category', 'account', 'tags'])
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
     }
 
     public function create(array $data): Transaction

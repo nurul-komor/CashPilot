@@ -6,6 +6,8 @@ use App\Application\Account\Commands\CreateAccountCommand;
 use App\Application\Account\Commands\TransferAccountCommand;
 use App\Domain\Account\Repositories\AccountRepositoryInterface;
 use App\Domain\Bank\Repositories\FinancialInstitutionRepositoryInterface;
+use App\Domain\Category\Repositories\CategoryRepositoryInterface;
+use App\Domain\Tag\Repositories\TagRepositoryInterface;
 use App\Presentation\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +18,8 @@ class AccountController extends Controller
     public function __construct(
         private AccountRepositoryInterface $accountRepository,
         private FinancialInstitutionRepositoryInterface $financialInstitutionRepository,
+        private CategoryRepositoryInterface $categoryRepository,
+        private TagRepositoryInterface $tagRepository,
         private CreateAccountCommand $createAccountCommand,
         private TransferAccountCommand $transferAccountCommand
     ) {}
@@ -61,9 +65,13 @@ class AccountController extends Controller
     public function transferForm(Request $request): Response
     {
         $accounts = $this->accountRepository->findByUserId($request->user()->id);
+        $categories = $this->categoryRepository->findByUserId($request->user()->id);
+        $tags = $this->tagRepository->findByUserId($request->user()->id);
 
         return Inertia::render('Accounts/Transfer', [
             'accounts' => $accounts,
+            'categories' => $categories,
+            'tags' => $tags,
         ]);
     }
 
@@ -74,12 +82,32 @@ class AccountController extends Controller
             'to_account_id' => 'required|exists:accounts,id|different:from_account_id',
             'amount' => 'required|numeric|min:0.01',
             'currency' => 'nullable|string|max:3',
-            'description' => 'nullable|string',
+            'conversion_rate' => 'nullable|numeric|min:0.0001',
+            'transaction_type' => 'nullable|string|in:general,savings',
+            'category_id' => 'nullable|exists:categories,id',
+            'description' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
             'transaction_date' => 'nullable|date',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'exists:tags,id',
+            'receipt' => 'nullable|file|image|max:2048',
         ]);
 
         $validated['user_id'] = $request->user()->id;
+
+        // Handle receipt upload
+        if ($request->hasFile('receipt')) {
+            $validated['receipt_path'] = $request->file('receipt')->store('receipts', 'public');
+        }
+
         $result = ($this->transferAccountCommand)($validated);
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => 'Transfer completed successfully.',
+                'data' => $result,
+            ]);
+        }
 
         return redirect()->route('accounts.index')->with('success', 'Transfer completed successfully.');
     }

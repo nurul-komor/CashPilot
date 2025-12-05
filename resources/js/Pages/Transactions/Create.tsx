@@ -7,8 +7,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Checkbox from '@/Components/Checkbox';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { Sparkles } from 'lucide-react';
 import ReceiptScanner from '@/Components/ReceiptScanner';
+import axios from 'axios';
+import { useState } from 'react';
 
 interface TransactionsCreateProps {
     accounts: Account[];
@@ -16,7 +19,9 @@ interface TransactionsCreateProps {
     tags: Tag[];
 }
 
-export default function TransactionsCreate({ accounts, categories, tags }: TransactionsCreateProps) {
+export default function TransactionsCreate({ accounts, categories: initialCategories, tags }: TransactionsCreateProps) {
+    const [categories, setCategories] = useState<Category[]>(initialCategories);
+
     const { data, setData, post, processing, errors, reset } = useForm({
         account_id: '',
         type: 'expense',
@@ -43,7 +48,7 @@ export default function TransactionsCreate({ accounts, categories, tags }: Trans
     const transactionTypes = [
         { value: 'income', label: 'Income' },
         { value: 'expense', label: 'Expense' },
-        { value: 'transfer', label: 'Transfer' },
+        { value: 'savings', label: 'Savings' },
     ];
 
     const recurringFrequencies = [
@@ -60,6 +65,27 @@ export default function TransactionsCreate({ accounts, categories, tags }: Trans
             ? data.tag_ids.filter(id => id !== tagId)
             : [...data.tag_ids, tagId]
         );
+    };
+
+    const handleCreateCategory = async (name: string): Promise<Category> => {
+        // Check if category already exists (case-insensitive)
+        const existingCategory = categories.find(
+            cat => cat.name.toLowerCase().trim() === name.toLowerCase().trim() && cat.type === data.type
+        );
+
+        if (existingCategory) {
+            // Return existing category instead of creating a new one
+            return existingCategory;
+        }
+
+        const response = await axios.post(route('categories.store'), {
+            name,
+            type: data.type,
+        });
+
+        const newCategory = response.data;
+        setCategories(prev => [...prev, newCategory]);
+        return newCategory;
     };
 
     return (
@@ -121,7 +147,7 @@ export default function TransactionsCreate({ accounts, categories, tags }: Trans
                                     id="type"
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     value={data.type}
-                                    onChange={(e) => setData('type', e.target.value as 'income' | 'expense' | 'transfer')}
+                                    onChange={(e) => setData('type', e.target.value as 'income' | 'expense' | 'savings')}
                                     required
                                 >
                                     {transactionTypes.map((type) => (
@@ -183,25 +209,18 @@ export default function TransactionsCreate({ accounts, categories, tags }: Trans
                                 <InputError message={errors.currency} className="mt-2" />
                             </div>
 
-                            {data.type !== 'transfer' && (
-                                <div>
-                                    <InputLabel htmlFor="category_id" value="Category" />
-                                    <select
-                                        id="category_id"
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        value={data.category_id}
-                                        onChange={(e) => setData('category_id', e.target.value)}
-                                    >
-                                        <option value="">Select a category</option>
-                                        {filteredCategories.map((category) => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <InputError message={errors.category_id} className="mt-2" />
-                                </div>
-                            )}
+                            <div>
+                                <SearchableSelect
+                                    options={filteredCategories}
+                                    value={data.category_id || null}
+                                    onChange={(value) => setData('category_id', value?.toString() || '')}
+                                    placeholder="Search or create a category..."
+                                    label="Category"
+                                    error={errors.category_id}
+                                    onCreateNew={handleCreateCategory}
+                                    createLabel="Create category"
+                                />
+                            </div>
 
                             <div>
                                 <InputLabel htmlFor="description" value="Description" />

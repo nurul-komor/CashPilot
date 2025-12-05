@@ -124,11 +124,15 @@ class ReportController extends Controller
     private function getCategorySpendingData($transactions): array
     {
         $expenses = $transactions->where('type', 'expense');
-        $grouped = $expenses->groupBy('category_id');
+        $grouped = $expenses->groupBy(function ($transaction) {
+            return $transaction->category_id ?? 'uncategorized';
+        });
 
         $data = [];
         foreach ($grouped as $categoryId => $group) {
-            $category = $group->first()?->category;
+            $firstTransaction = $group->first();
+            $category = $firstTransaction?->category;
+
             $data[] = [
                 'name' => $category?->name ?? 'Uncategorized',
                 'value' => (float) $group->sum('amount'),

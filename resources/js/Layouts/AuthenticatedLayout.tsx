@@ -26,7 +26,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
                                 <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
+                                    <ApplicationLogo />
                                 </Link>
                             </div>
 
@@ -39,9 +39,15 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                 </NavLink>
                                 <NavLink
                                     href={route('accounts.index')}
-                                    active={route().current('accounts.*')}
+                                    active={route().current('accounts.*') && !route().current('accounts.transfer')}
                                 >
                                     Accounts
+                                </NavLink>
+                                <NavLink
+                                    href={route('accounts.transfer')}
+                                    active={route().current('accounts.transfer')}
+                                >
+                                    Transfer
                                 </NavLink>
                                 <NavLink
                                     href={route('transactions.index')}
@@ -173,9 +179,15 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             href={route('accounts.index')}
-                            active={route().current('accounts.*')}
+                            active={route().current('accounts.*') && !route().current('accounts.transfer')}
                         >
                             Accounts
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('accounts.transfer')}
+                            active={route().current('accounts.transfer')}
+                        >
+                            Transfer
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             href={route('transactions.index')}

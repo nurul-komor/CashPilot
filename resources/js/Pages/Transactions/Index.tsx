@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Plus, Eye, Edit, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Receipt } from 'lucide-react';
+import { Plus, Eye, Edit, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Receipt, PiggyBank } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TransactionsIndexProps {
@@ -24,11 +24,15 @@ export default function TransactionsIndex({ transactions, accounts, categories, 
     const getTypeIcon = (type: string) => {
         switch (type) {
             case 'income':
-                return <ArrowDownRight className="h-4 w-4 text-green-600" />;
+                return <ArrowUpRight className="h-4 w-4 text-green-600" />;
             case 'expense':
-                return <ArrowUpRight className="h-4 w-4 text-red-600" />;
+                return <ArrowDownRight className="h-4 w-4 text-red-600" />;
             case 'transfer':
                 return <ArrowLeftRight className="h-4 w-4 text-blue-600" />;
+            case 'savings':
+                return <PiggyBank className="h-4 w-4 text-purple-600" />;
+            case 'general':
+                return <ArrowUpRight className="h-4 w-4 text-green-600" />;
             default:
                 return null;
         }
@@ -42,6 +46,10 @@ export default function TransactionsIndex({ transactions, accounts, categories, 
                 return 'text-red-600';
             case 'transfer':
                 return 'text-blue-600';
+            case 'savings':
+                return 'text-purple-600';
+            case 'general':
+                return 'text-green-600';
             default:
                 return 'text-gray-600';
         }
@@ -55,6 +63,8 @@ export default function TransactionsIndex({ transactions, accounts, categories, 
                 return 'bg-red-100';
             case 'transfer':
                 return 'bg-blue-100';
+            case 'savings':
+                return 'bg-purple-100';
             default:
                 return 'bg-gray-100';
         }
@@ -155,7 +165,7 @@ export default function TransactionsIndex({ transactions, accounts, categories, 
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <span className={`text-lg font-semibold ${getTypeColor(transaction.type)}`}>
-                                                        {transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''}
+                                                        {transaction.type === 'expense' ? '-' : transaction.type === 'income' || transaction.type === 'savings' || transaction.type === 'general' ? '+' : ''}
                                                         ৳{parseFloat(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                     </span>
                                                 </TableCell>
@@ -188,7 +198,7 @@ export default function TransactionsIndex({ transactions, accounts, categories, 
                                     <div key={transaction.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                                         <div className="flex items-start justify-between mb-4">
                                             <div className={`text-2xl font-bold ${getTypeColor(transaction.type)}`}>
-                                                {transaction.type === 'expense' ? '-' : transaction.type === 'income' ? '+' : ''}
+                                                {transaction.type === 'expense' ? '-' : transaction.type === 'income' || transaction.type === 'savings' || transaction.type === 'general' ? '+' : ''}
                                                 ৳{parseFloat(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                             </div>
                                             {getStatusBadge(transaction.status)}

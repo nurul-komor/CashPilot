@@ -26,7 +26,7 @@ export interface Transaction {
     user_id: number;
     account_id: number;
     to_account_id?: number | null;
-    type: 'income' | 'expense' | 'transfer';
+    type: 'income' | 'expense' | 'transfer' | 'savings' | 'general';
     amount: string;
     currency: string;
     category_id?: number | null;

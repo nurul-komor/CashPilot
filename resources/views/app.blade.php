@@ -6,6 +6,10 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+        <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
+
         <!-- PWA Meta Tags -->
         <meta name="theme-color" content="#a855f7"/>
         <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,6 +17,10 @@
         <meta name="apple-mobile-web-app-title" content="FinGenie">
         <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
         <link rel="manifest" href="{{ asset('/manifest.json') }}">
+        
+        <!-- Android Chrome -->
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="application-name" content="FinGenie">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

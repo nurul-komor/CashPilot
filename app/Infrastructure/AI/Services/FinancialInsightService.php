@@ -135,10 +135,19 @@ Provide comprehensive insights in JSON format:
 
     private function calculateSummary($transactions): array
     {
-        $income = $transactions->where('type', 'income')->sum('amount');
+        // Include income, savings, and general types as positive transactions
+        $income = $transactions->whereIn('type', ['income', 'savings', 'general'])->sum('amount');
         $expenses = $transactions->where('type', 'expense')->sum('amount');
         $net = $income - $expenses;
+
+        // Calculate savings rate: (Net Savings / Total Income) * 100
+        // Handle edge cases: if income is 0 or negative, savings rate should be 0
         $savingsRate = $income > 0 ? ($net / $income) * 100 : 0;
+
+        // Ensure savings rate is a valid number and within reasonable bounds
+        if (!is_numeric($savingsRate) || is_nan($savingsRate) || is_infinite($savingsRate)) {
+            $savingsRate = 0;
+        }
 
         return [
             'total_income' => (float) $income,
