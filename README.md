@@ -55,6 +55,32 @@ CashPilot (internally also called **FinGenie**) helps you manage multiple financ
 
 ## 🏗️ Architecture
 
+### System design
+
+```mermaid
+flowchart TB
+    subgraph Frontend["Frontend - React + Inertia"]
+        Pages["Accounts - Transactions - Budgets - Goals - Dashboard"]
+        Scan["ReceiptScanner - DocumentScanner"]
+    end
+    subgraph Laravel["Laravel 12 - layered DDD"]
+        Pres["Presentation (Controllers)"]
+        App["Application (Commands + AI services)"]
+        Dom["Domain (Entities + Repository interfaces)"]
+        Infra["Infrastructure (Eloquent repos + GeminiClient)"]
+    end
+    DB[("SQLite dev / MySQL prod")]
+    Gemini["Google Gemini API"]
+    Push["Pusher Beams"]
+
+    Pages -->|Inertia| Pres
+    Scan -->|/api/ai| Pres
+    Pres --> App --> Dom
+    App --> Infra --> DB
+    Infra -->|AI| Gemini
+    Pres --> Push
+```
+
 A single Laravel + Inertia app with a deliberate **layered / Domain-Driven Design** structure:
 
 ```
